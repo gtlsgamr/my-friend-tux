@@ -319,8 +319,12 @@ write_current_stats(){
 	total_feeds=$(tail -n 1 "$TUX_STATS" | awk '{print $3}')
 	longest_streak=$(tail -n 1 "$TUX_STATS" | awk '{print $4}')
 	# Calculate the streak
-	if [ $(($current_timestamp - $last_timestamp)) -le 86400 ]; then
-		streak=$(($longest_streak + 1))
+	if [ -s "$TUX_STATS" ]; then
+		if [ "$(($current_timestamp - $last_timestamp))" -le 86400 ]; then
+			streak="$longest_streak"
+		else
+			streak=$(($longest_streak + 1))
+		fi
 	fi
 
 	if [ $streak -ge 2 ]; then
@@ -353,7 +357,6 @@ change_stage(){
 	# Get the next stage
 	next_stage=${STAGES[$current_stage_index]}
 	# Write the next stage
-	echo "Yes we done here"
 	echo "$next_stage $(date +%s) 0 0" >> "$TUX_STATS"
 }
 
