@@ -54,7 +54,7 @@ TUX_FILE="$TUX_DIR/mftux.txt"
 TUX_STATS="$TUX_DIR/mftux.stats"
 TUX_SCORE="$TUX_DIR/mftux.scores"
 TUX_LOG="$TUX_DIR/mftux.log"
-STAGES=("baby" "toddler" "regular" "big" "funeral")
+STAGES=("baby" "toddler" "regular" "big")
 WELCOME_MESSAGE="Hello! I am Tux. Your friend!! I am a penguin, and a cool one at that.  Fighting GNUs all day makes me hangry. Please don't forget to feed me? :("
 
 BABY_TUX="ICBfXwogKCBvYC0KIC8gIFwKIHwgIHwKICBeXg=="
@@ -309,42 +309,6 @@ display_stats(){
 	done < "$TUX_STATS"
 }
 
-write_current_stats(){
-	current_stats=$(cat "$TUX_STATS")
-	current_timestamp=$(date +%s)
-
-
-	last_stage=$(tail -n 1 "$TUX_STATS" | awk '{print $1}')
-	last_timestamp=$(tail -n 1 "$TUX_STATS" | awk '{print $2}')
-	total_feeds=$(tail -n 1 "$TUX_STATS" | awk '{print $3}')
-	longest_streak=$(tail -n 1 "$TUX_STATS" | awk '{print $4}')
-	# Calculate the streak
-	if [ -s "$TUX_STATS" ]; then
-		if [ "$(($current_timestamp - $last_timestamp))" -le 86400 ]; then
-			streak="$longest_streak"
-		else
-			streak=$(($longest_streak + 1))
-		fi
-	fi
-
-	if [ $streak -ge 2 ]; then
-		if [ $streak -ge 2 ] && [ $streak -lt 5 ]; then
-			if [ $last_stage != "toddler" ]; then
-				change_stage
-			fi
-		elif [ $streak -ge 5 ] && [ $streak -lt 10 ]; then
-			if [ $last_stage != "regular" ]; then
-				change_stage
-			fi
-		fi
-	fi
-
-	# Write the stats
-	echo "$last_stage $current_timestamp $((total_feeds + 1)) $streak" > "$TUX_STATS"
-	echo "You fed Tux!"
-}
-
-
 change_stage(){
 	# Get the current stage
 	current_stage=$(tail -n 1 "$TUX_STATS" | awk '{print $1}')
@@ -357,14 +321,56 @@ change_stage(){
 	# Get the next stage
 	next_stage=${STAGES[$current_stage_index]}
 	# Write the next stage
-	echo "$next_stage $(date +%s) 0 0" >> "$TUX_STATS"
+	echo "$next_stage $(date +%s) 0 0" > "$TUX_STATS"
 }
+
+write_current_stats(){
+	current_stats=$(cat "$TUX_STATS")
+	current_timestamp=$(date +%s)
+
+
+	last_stage=$(tail -n 1 "$TUX_STATS" | awk '{print $1}')
+	last_timestamp=$(tail -n 1 "$TUX_STATS" | awk '{print $2}')
+	total_feeds=$(tail -n 1 "$TUX_STATS" | awk '{print $3}')
+	longest_streak=$(tail -n 1 "$TUX_STATS" | awk '{print $4}')
+	# Calculate the streak
+	streak=$longest_streak
+	if [ -s "$TUX_STATS" ]; then
+		if [ "$(($current_timestamp - $last_timestamp))" -le 86400 ]; then
+			streak="$longest_streak"
+		else
+			streak=$(($longest_streak + 1))
+		fi
+	fi
+
+	if [ $streak -ge 2 ]; then
+		if [ $streak -ge 2 ] && [ $streak -lt 5 ]; then
+			if [ $last_stage != "toddler" ]; then
+				change_stage
+				current_stats=$(cat "$TUX_STATS")
+				last_stage=$(tail -n 1 "$TUX_STATS" | awk '{print $1}')
+			fi
+		elif [ $streak -ge 5 ] && [ $streak -lt 10 ]; then
+			if [ $last_stage != "regular" ]; then
+				change_stage
+				current_stats=$(cat "$TUX_STATS")
+				last_stage=$(tail -n 1 "$TUX_STATS" | awk '{print $1}')
+			fi
+		fi
+	fi
+
+	# Write the stats
+	echo "$last_stage $current_timestamp $((total_feeds + 1)) $streak" > "$TUX_STATS"
+	echo "You fed Tux!"
+}
+
+
 
 typewrite(){
 	tput setaf 2 &>/dev/null # green powaaa
 	for ((i=0; i<=${#1}; i++)); do
 		printf '%s' "${1:$i:1}"
-		sleep 0.$(( (RANDOM % 3)  ))
+		sleep 0.$(( (RANDOM % 2)  ))
 	done
 	printf "\n"
 	tput sgr0 2 &>/dev/null
@@ -407,8 +413,6 @@ display_tux() {
 			ASCII_ART=$(printf "%s" "$FUNERAL_TUX" | base64 --decode)
 			printf "%s\n-------------\n" "$ASCII_ART"
 			typewrite "Are you happy now? You killed Tux. Now try to answer his mom and dad. They are here for the funeral. 😢"
-			echo "$TUX_STATS" >> "$TUX_SCORE"
-			> "$TUX_STATS"
 			;;
 		*)
 			ASCII_ART=$(printf "%s" "$BABY_TUX" | base64 --decode)
@@ -441,9 +445,8 @@ display_tux() {
 					clear
 					ASCII_ART=$(printf "%s" "$FUNERAL_TUX" | base64 --decode)
 					printf "%s\n-------------\n" "$ASCII_ART"
-					echo "You killed Tux. 😢"
-					echo "$TUX_STATS" >> "$TUX_SCORE"
-					echo "" > "$TUX_STATS"
+					typewrite "Are you happy now? You killed Tux. Now try to answer his mom and dad. They are here for the funeral. 😢"
+					cat "$TUX_STATS" >> "$TUX_SCORE"
 				fi
 			fi
 		elif [ "$days_difference" -gt 2 ]; then
@@ -477,7 +480,7 @@ if [ $# -eq 0 ]; then
 				write_current_stats
 				;;
 			2)
-				display_quote 
+				display_tux
 				;;
 			3)
 				display_stats
