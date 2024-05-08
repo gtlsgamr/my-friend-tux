@@ -345,18 +345,26 @@ write_current_stats(){
 
 	if [ $streak -ge 2 ]; then
 		if [ $streak -ge 2 ] && [ $streak -lt 5 ]; then
-			if [ $last_stage != "toddler" ]; then
+			if [ $last_stage == "baby" ]; then
 				change_stage
 				current_stats=$(cat "$TUX_STATS")
 				last_stage=$(tail -n 1 "$TUX_STATS" | awk '{print $1}')
 			fi
 		elif [ $streak -ge 5 ] && [ $streak -lt 10 ]; then
-			if [ $last_stage != "regular" ]; then
+			if [ $last_stage != "toddler" ]; then
 				change_stage
 				current_stats=$(cat "$TUX_STATS")
 				last_stage=$(tail -n 1 "$TUX_STATS" | awk '{print $1}')
 			fi
 		fi
+		elif [ $streak -ge 10 ]; then
+			if [ $last_stage == "regular" ]; then
+				change_stage
+				current_stats=$(cat "$TUX_STATS")
+				last_stage=$(tail -n 1 "$TUX_STATS" | awk '{print $1}')
+			fi
+		fi
+
 	fi
 
 	# Write the stats
