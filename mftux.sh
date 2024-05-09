@@ -315,11 +315,18 @@ change_stage(){
 	last_timestamp=$(tail -n 1 "$TUX_STATS" | awk '{print $2}')
 	total_feeds=$(tail -n 1 "$TUX_STATS" | awk '{print $3}')
 	longest_streak=$(tail -n 1 "$TUX_STATS" | awk '{print $4}')
-	# Get the index of the current stage
-	current_stage_index=$(echo ${STAGES[@]/$current_stage/} | awk '{print NF}')
 	typewrite "Tux is growing up! 😊"
-	# Get the next stage
-	next_stage=${STAGES[$current_stage_index]}
+
+	if [ $current_stage == "baby" ]; then
+		next_stage="toddler"
+	elif [ $current_stage == "toddler" ]; then
+		next_stage="regular"
+	elif [ $current_stage == "regular" ]; then
+		next_stage="big"
+	elif [ $current_stage == "big" ]; then
+		next_stage="big"
+	fi
+
 	# Write the next stage
 	echo "$next_stage $(date +%s) 0 0" > "$TUX_STATS"
 }
@@ -347,25 +354,23 @@ write_current_stats(){
 		if [ $streak -ge 2 ] && [ $streak -lt 5 ]; then
 			if [ $last_stage == "baby" ]; then
 				change_stage
-				current_stats=$(cat "$TUX_STATS")
-				last_stage=$(tail -n 1 "$TUX_STATS" | awk '{print $1}')
 			fi
 		elif [ $streak -ge 5 ] && [ $streak -lt 10 ]; then
 			if [ $last_stage != "toddler" ]; then
 				change_stage
-				current_stats=$(cat "$TUX_STATS")
-				last_stage=$(tail -n 1 "$TUX_STATS" | awk '{print $1}')
 			fi
-		fi
 		elif [ $streak -ge 10 ]; then
 			if [ $last_stage == "regular" ]; then
 				change_stage
-				current_stats=$(cat "$TUX_STATS")
-				last_stage=$(tail -n 1 "$TUX_STATS" | awk '{print $1}')
 			fi
 		fi
-
 	fi
+
+	current_stats=$(cat "$TUX_STATS")
+	last_stage=$(tail -n 1 "$TUX_STATS" | awk '{print $1}')
+	last_timestamp=$(tail -n 1 "$TUX_STATS" | awk '{print $2}')
+	total_feeds=$(tail -n 1 "$TUX_STATS" | awk '{print $3}')
+	longest_streak=$(tail -n 1 "$TUX_STATS" | awk '{print $4}')
 
 	# Write the stats
 	echo "$last_stage $current_timestamp $((total_feeds + 1)) $streak" > "$TUX_STATS"
