@@ -484,8 +484,7 @@ if [ $# -eq 0 ]; then
 		echo "Choose an option:"
 		echo "1. Feed Tux"
 		echo "2. Get a Quote"
-		echo "3. Check Streak"
-		echo "4. Exit"
+		echo "3. Exit"
 		read -p "Enter your choice: " choice
 
 		case $choice in
@@ -496,9 +495,6 @@ if [ $# -eq 0 ]; then
 				display_tux
 				;;
 			3)
-				display_stats
-				;;
-			4)
 				break
 				;;
 			*)
